@@ -1,0 +1,118 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Home Page
+{% endblock %}
+
+{% block main %}
+
+<div class="container mt-5 text-center">
+    <h1 class="mb-5">Dashboard</h1>
+
+    <div class="row justify-content-center">
+        <div class="col-md-5 mb-3">
+            <div class="card p-4 h-100">
+                <h3>Start Fresh</h3>
+                <p>Create a brand new empty list.</p>
+                <button type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#createListModal">
+                    + Create New List
+                </button>
+            </div>
+        </div>
+
+        <div class="col-md-5 mb-3">
+            <div class="card p-4 h-100">
+                <h3>Use a Template</h3>
+                <p>Start a job from a saved template.</p>
+                <a href="#templates-section" class="btn btn-success btn-lg">Load Existing Template</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center mt-3">
+        <div class="col-md-5 mb-3">
+            <div class="card p-4">
+                <a href="#lists-section" class="btn btn-outline-secondary">Load Saved Lists</a>
+            </div>
+        </div>
+        <div class="col-md-5 mb-3">
+            <div class="card p-4">
+                <a href="#templates-section" class="btn btn-outline-secondary">Manage Templates</a>
+            </div>
+        </div>
+    </div>
+
+    <hr class="my-5">
+
+    <div id="lists-section" class="text-start">
+        <h3>Your Saved Lists</h3>
+        <div class="list-group">
+            {% for l in lists %}
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                
+                <a href="/lists/{{ l.id }}" class="text-decoration-none text-dark flex-grow-1">
+                    {{ l.name }}
+                </a>
+
+                <div class="d-flex align-items-center gap-2">
+                    
+                    <a href="/lists/{{ l.id }}" class="badge bg-primary rounded-pill text-decoration-none">
+                        Open
+                    </a>
+
+                    <form action="{{ url_for('delete_list', list_id=l.id) }}" method="POST" style="display: inline;">
+                        <button type="submit" class="badge bg-danger rounded-pill border-0" 
+                                style="cursor: pointer;"
+                                onclick="return confirm('Are you sure you want to delete this list? This cannot be undone.');">
+                            Delete
+                        </button>
+                    </form>
+                    
+                </div>
+
+            </div>
+            {% else %}
+            <p class="text-muted">No active lists found.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <hr class="my-5">
+
+    <div id="templates-section" class="text-start">
+        <h3>Your Templates</h3>
+        <ul class="list-group">
+            {% for t in templates %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ t.name }}
+                <form action="/use_template/{{ t.id }}" method="POST">
+                    <button class="btn btn-sm btn-success">Load This Template</button>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<div class="modal fade" id="createListModal" tabindex="-1" aria-labelledby="createListModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="createListModalLabel">Name Your New List</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="/create_list" method="POST">
+          <div class="modal-body">
+            <label for="list-name-input" class="form-label">List Title</label>
+            <input type="text" class="form-control" id="list-name-input" name="list_name" placeholder="e.g. Weekend Job" required>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Save & Open List</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
