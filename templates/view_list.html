@@ -1,3 +1,51 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:3e5faf3635662bf3a265dae7aa693556381879c6e6358e6401deb922c9c35fd2
-size 1975
+{% extends "layout.html" %}
+
+{% block title %}
+    {{ current_list.name }}
+{% endblock %}
+
+{% block main %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ current_list.name }}</h1>
+        <form action="{{ url_for('save_as_template', list_id=current_list.id) }}" method="POST">
+            <button class="btn btn-warning" type="submit">Save as Template</button>
+        </form>
+        <a href="/" class="btn btn-outline-secondary">Back to Dashboard</a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <strong>Add New Item</strong>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('add_item', list_id=current_list.id) }}" method="POST" class="d-flex gap-2">
+                <input type="hidden" name="list_id" value="{{ current_list.id }}">
+                <input type="text" name="content" class="form-control" placeholder="Enter new item..." required>
+                <button type="submit" class="btn btn-success">Save Item</button>
+            </form>
+        </div>
+    </div>
+
+    <h3>Items</h3>
+    <ul class="list-group">
+        {% for item in current_list.items %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            
+            <span>
+                {{ item.content }}
+            </span>
+
+            <form action="/delete_item" method="POST" onsubmit="return confirm('Are you sure you would like to remove this item?');">
+                <input type="hidden" name="item_id" value="{{ item.id }}">
+                <input type="hidden" name="list_id" value="{{ current_list.id }}">
+                <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+            </form>
+        </li>
+        {% else %}
+        <li class="list-group-item text-center text-muted">No items in this list yet.</li>
+        {% endfor %}
+    </ul>
+</div>
+
+{% endblock %}

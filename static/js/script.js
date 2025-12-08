@@ -1,3 +1,26 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:3f2a302ef615457ad7138750d22d09131ad46fa9e0bcb4374959ebe80cceb1ca
-size 700
+$(document).ready(function() {
+
+    // Handle "Use Template"
+    $('.use-template-btn').click(function() {
+        const templateId = $(this).data('id');
+        
+        $.post(`/use_template/${templateId}`, function(data) {
+            if(data.success) {
+                location.reload(); // Reload to show the new list
+            }
+        });
+    });
+
+    // Handle "Save as Template"
+    $('.save-template-btn').click(function() {
+        const listId = $(this).data('id');
+        
+        $.post(`/save_as_template/${listId}`, function(data) {
+            if(data.success) {
+                alert('Template Saved!');
+                location.reload();
+            }
+        });
+    });
+
+});

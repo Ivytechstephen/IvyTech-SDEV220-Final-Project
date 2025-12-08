@@ -1,3 +1,33 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:65bf77b6f247b0f570a70b4574799fd3fe5c86de14fa8c42f7bcb094fe1f4ba6
-size 300
+# Python
+*.pyc
+*~
+__pycache__
+
+# Env
+.env
+venv/
+
+# Database
+db.sqlite3
+
+# folders at project root
+/remove/
+/instance/
+/flask_session/
+
+# macOS
+._*
+.DS_Store
+.fseventsd
+.Spotlight-V100
+
+# Windows
+Thumbs.db*
+ehthumbs*.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# Visual Studio
+.vscode/
+.history/
+*.code-workspace
