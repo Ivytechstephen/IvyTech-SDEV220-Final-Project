@@ -1,13 +1,3 @@
-cachelib==0.13.0
-click==8.3.1
-Flask==3.1.2
-Flask-Session==0.8.0
-Flask-SQLAlchemy==3.1.1
-greenlet==3.2.4
-itsdangerous==2.2.0
-Jinja2==3.1.6
-MarkupSafe==3.0.3
-msgspec==0.19.0
-SQLAlchemy==2.0.44
-typing_extensions==4.15.0
-Werkzeug==3.1.3
+version https://git-lfs.github.com/spec/v1
+oid sha256:c10afc3399cf13cc8d5bad34d68f1dd94ba133685b31c225a46d14b4601d9337
+size 232
