@@ -262,6 +262,40 @@ def add_item(list_id):
     return redirect(url_for('view_list', list_id=list_id))
 
 
+@app.route('/update_quantity', methods=['POST'])
+def update_quantity():
+    # Get data from the form
+    item_id = request.form.get('item_id')
+    new_quantity = request.form.get('new_quantity')
+    list_id = request.form.get('list_id')
+
+    # Find the item
+    item = Item_Obj.query.get_or_404(item_id)
+
+    # Update the quantity (ensure it's an integer)
+    if new_quantity:
+        item.quantity = int(new_quantity)
+        db.session.commit()
+
+    # Refresh the page
+    return redirect(url_for('view_list', list_id=list_id))
+
+
+# Toggle item completed or not
+@app.route('/toggle_complete', methods=['POST'])
+@login_required
+def toggle_complete():
+    item_id = request.form.get('item_id')
+    list_id = request.form.get('list_id')
+    
+    item = Item_Obj.query.get_or_404(item_id)
+    # True becomes False, False becomes True
+    item.is_completed = not item.is_completed
+    
+    db.session.commit()
+    return redirect(url_for('view_list', list_id=list_id))
+
+
 # Delete Item
 @app.route('/delete_item', methods=['POST'])
 @login_required
@@ -283,41 +317,110 @@ def delete_item():
 
 # Save existing list as a Template
 @app.route('/save_as_template/<int:list_id>', methods=['POST'])
+@login_required
 def save_as_template(list_id):
+    # Get the original list
     original_list = List_Obj.query.get_or_404(list_id)
     
-    # Create the Template Clone
-    new_template = List_Obj(name=f"{original_list.name} (Template)", is_template=True)
+    # Get the new name from the Modal form
+    new_template_name = request.form.get('template_name')
+
+    # Check if the name is the same as the original
+    # If name field empty or exact same name
+    if not new_template_name or new_template_name.strip() == original_list.name.strip():
+        flash("Please choose a different name for the template to avoid confusion.", "error")
+        return redirect(url_for('view_list', list_id=list_id))
+
+    # Create the new Template
+    new_template = List_Obj(
+        name=new_template_name,
+        is_template=True,
+        user_id=session["user_id"]
+    )
     db.session.add(new_template)
-    db.session.commit() # Commit to get the new ID
-    
-    # Deep Copy of Items from original list
+    db.session.commit() 
+
+    # Deep Copy of items
     for item in original_list.items:
         new_item = Item_Obj(
             content=item.content,
-            # Preserve quantity structure
-            quantity=item.quantity, 
-            # Reset completion status for the template
-            is_completed=False,     
+            quantity=item.quantity, # Preserve quantity
+            is_completed=False,
             list_id=new_template.id
         )
         db.session.add(new_item)
     
     db.session.commit()
-    return jsonify({'success': True, 'message': 'Template saved!'})
+    
+    flash(f"Successfully created template: '{new_template_name}'", "success")
+    return redirect(url_for('index'))
 
 
+# Template preview
+@app.route('/templates/<int:template_id>', methods=['GET'])
+@login_required
+def preview_template(template_id):
+    template = List_Obj.query.get_or_404(template_id)
+    
+    # Ensure it belongs to this user and is a template
+    if template.user_id != session["user_id"] or not template.is_template:
+        return apology("Access Denied", 403)
+        
+    return render_template('preview_template.html', current_list=template)
 
-# Create new List from Template
+
+# Delete a Template
+@app.route('/delete_template/<int:template_id>', methods=['POST'])
+@login_required
+def delete_template(template_id):
+    template = List_Obj.query.get_or_404(template_id)
+    
+    # Check session id
+    if template.user_id != session["user_id"]:
+        return apology("Access Denied", 403)
+
+    try:
+        db.session.delete(template)
+        db.session.commit()
+        flash("Template deleted successfully.", "success")
+    except:
+        flash("Error deleting template.", "error")
+        
+    return redirect(url_for('index'))
+
+
+# Update item content in template preview mode
+@app.route('/update_item_content', methods=['POST'])
+@login_required
+def update_item_content():
+    item_id = request.form.get('item_id')
+    new_content = request.form.get('content')
+    template_id = request.form.get('list_id') 
+    
+    item = Item_Obj.query.get_or_404(item_id)
+    
+    if new_content:
+        item.content = new_content
+        db.session.commit()
+        
+    return redirect(url_for('preview_template', template_id=template_id))
+
+
+# Create new List from Template 
 @app.route('/use_template/<int:template_id>', methods=['POST'])
 @login_required
 def use_template(template_id):
     template = List_Obj.query.get_or_404(template_id)
     
+    # Get the custom name from the Modal form
+    # If they left it blank, fallback to a default name
+    custom_name = request.form.get('list_name')
+    final_name = custom_name if custom_name else f"List from {template.name}"
+
+    # Create the New List
     new_list = List_Obj(
-        name=f"Job from {template.name}", 
+        name=final_name, 
         is_template=False,
-        # Assign to current user
         user_id=session["user_id"] 
     )
     db.session.add(new_list)
@@ -327,7 +430,6 @@ def use_template(template_id):
     for item in template.items:
         new_item = Item_Obj(
             content=item.content,
-            # Start with template quantities
             quantity=item.quantity, 
             is_completed=False,
             list_id=new_list.id
@@ -336,11 +438,12 @@ def use_template(template_id):
         
     db.session.commit()
 
-    # Debugging (REMOVE ME)
-    return jsonify({'success': True, 'id': new_list.id})
+    # Redirect to the new list
+    flash(f"New list '{final_name}' created from template!", "success")
+    return redirect(url_for('view_list', list_id=new_list.id))
 
 
-# Route to Save the data to the database
+# Route to save the data to the database
 @app.route('/save_new_list', methods=['POST'])
 @login_required
 def save_new_list():
@@ -351,7 +454,7 @@ def save_new_list():
     contents = request.form.getlist("contents[]")
     quantities = request.form.getlist("quantities[]")
 
-    # Determine if it is a template based on the hidden input
+    # Determine if it is a template
     is_template_bool = True if list_type == "template" else False
 
     # Create the List Object
