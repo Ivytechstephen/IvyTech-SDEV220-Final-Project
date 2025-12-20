@@ -62,43 +62,58 @@
                 </span>
             </div>
 
-            <form action="/delete_item" method="POST" onsubmit="return confirm('Are you sure you would like to remove this item?');">
-                <input type="hidden" name="item_id" value="{{ item.id }}">
-                <input type="hidden" name="list_id" value="{{ current_list.id }}">
-                <button type="submit" class="btn btn-danger btn-sm">Remove</button>
-            </form>
+            <button type="button" 
+                    class="btn btn-danger btn-sm" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#deleteModal{{ item.id }}">
+                Remove
+            </button>
         </li>
 
         <div class="modal fade" id="quantityModal{{ item.id }}" tabindex="-1" aria-hidden="true">
           <div class="modal-dialog modal-sm">
             <div class="modal-content">
-              
               <div class="modal-header">
                 <h5 class="modal-title">Edit Quantity</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
-              
               <form action="{{ url_for('update_quantity') }}" method="POST">
                   <div class="modal-body">
                     <p class="mb-2">Adjust quantity for: <strong>{{ item.content }}</strong></p>
-                    
                     <input type="hidden" name="item_id" value="{{ item.id }}">
                     <input type="hidden" name="list_id" value="{{ current_list.id }}">
-                    
-                    <input type="number" name="new_quantity" 
-                           class="form-control" 
-                           value="{{ item.quantity if item.quantity else 1 }}" 
-                           min="1" required>
+                    <input type="number" name="new_quantity" class="form-control" value="{{ item.quantity if item.quantity else 1 }}" min="1" required>
                   </div>
-                  
                   <div class="modal-footer">
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary btn-sm">Update</button>
                   </div>
               </form>
-
             </div>
           </div>
+        </div>
+
+        <div class="modal fade" id="deleteModal{{ item.id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-danger">Confirm Deletion</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to remove <strong>{{ item.content }}</strong> from the list?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        
+                        <form action="/delete_item" method="POST">
+                            <input type="hidden" name="item_id" value="{{ item.id }}">
+                            <input type="hidden" name="list_id" value="{{ current_list.id }}">
+                            <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
 
         {% else %}
